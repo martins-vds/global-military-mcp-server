@@ -96,7 +96,7 @@ class TestInventoryCategory:
         }
 
     def test_url_segments(self):
-        assert InventoryCategory.air_forces.url_segment == "/air-forces/"
+        assert InventoryCategory.air_forces.url_segment == "/air_forces/"
         assert InventoryCategory.air_bases.url_segment == "/airbases/"
         assert InventoryCategory.navies.url_segment == "/navies/"
         assert InventoryCategory.ranks.url_segment == "/ranks/"

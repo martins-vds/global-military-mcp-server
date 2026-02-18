@@ -195,7 +195,7 @@ class TestInventoryScraperIntegration:
     @respx.mock
     async def test_air_forces_data(self, tmp_path):
         html = (FIXTURES_DIR / "air_forces.html").read_text()
-        respx.get(f"{BASE_URL}/air-forces/").respond(200, text=html)
+        respx.get(f"{BASE_URL}/air_forces/").respond(200, text=html)
 
         svc, client = _make_service(tmp_path)
         async with client:

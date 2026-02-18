@@ -33,6 +33,9 @@ addopts = [
     "--strict-markers",
     "--tb=short",
 ]
+markers = [
+    "e2e: end-to-end smoke tests hitting the live site (may be slow / network-dependent)",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

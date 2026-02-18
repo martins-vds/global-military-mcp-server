@@ -123,7 +123,7 @@ class TestInventoryURLs:
 
     def test_list_url_air_forces(self):
         url = inventory_list_url(InventoryCategory.air_forces)
-        assert url == f"{BASE_URL}/air-forces/"
+        assert url == f"{BASE_URL}/air_forces/"
 
     def test_list_url_air_bases(self):
         url = inventory_list_url(InventoryCategory.air_bases)

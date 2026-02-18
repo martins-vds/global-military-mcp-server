@@ -213,7 +213,7 @@
                     {
                         "id": "air_forces",
                         "label": "Air Forces",
-                        "url_segment": "/air-forces/",
+                        "url_segment": "/air_forces/",
                         "supported_filters": [
                             "query",
                             "country"

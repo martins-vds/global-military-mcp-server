@@ -106,7 +106,7 @@ _SUB_CATEGORIES: dict[EquipmentCategory, list[str]] = {
 }
 
 _INVENTORY_URL_SEGMENTS: dict[InventoryCategory, str] = {
-    InventoryCategory.air_forces: "/air-forces/",
+    InventoryCategory.air_forces: "/air_forces/",
     InventoryCategory.air_bases: "/airbases/",
     InventoryCategory.navies: "/navies/",
     InventoryCategory.ranks: "/ranks/",
