@@ -53,7 +53,7 @@ async def search_inventory(
                 f"Country code must be 3 letters (ISO 3166-1 alpha-3), got '{country}'"
             )
 
-    lc = ctx.lifespan_context
+    lc = ctx.fastmcp._lifespan_result
     svc = SearchService(
         http_client=lc["http_client"],
         cache=lc["cache"],

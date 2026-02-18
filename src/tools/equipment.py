@@ -22,7 +22,7 @@ from src.domain.services import ComparisonService, IdentificationService, Search
 
 def _make_search_service(ctx: Context) -> SearchService:
     """Create SearchService from lifespan context."""
-    lc = ctx.lifespan_context
+    lc = ctx.fastmcp._lifespan_result
     return SearchService(
         http_client=lc["http_client"],
         cache=lc["cache"],
