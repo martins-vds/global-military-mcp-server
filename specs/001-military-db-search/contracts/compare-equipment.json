@@ -72,7 +72,8 @@
                                 "type": "object",
                                 "properties": {
                                     "iso3": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "pattern": "^[a-z]{3}$"
                                     },
                                     "name": {
                                         "type": "string"
@@ -99,7 +100,71 @@
                                 ]
                             },
                             "detail_url": {
-                                "type": "string"
+                                "type": "string",
+                                "format": "uri-reference"
+                            },
+                            "manufacturer": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Aircraft only"
+                            },
+                            "produced": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ],
+                                "description": "Aircraft only"
+                            },
+                            "description": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Aircraft only"
+                            },
+                            "thumbnail_url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Aircraft only"
+                            },
+                            "range_km": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Missiles only"
+                            },
+                            "max_speed": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Missiles only"
+                            },
+                            "ship_type": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Ships only"
+                            },
+                            "year": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ],
+                                "description": "Ships only"
+                            },
+                            "firearm_category": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Firearms only"
                             }
                         },
                         "required": [

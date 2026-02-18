@@ -100,13 +100,16 @@
                                         "minimum": 0
                                     },
                                     "detail_url": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "format": "uri-reference"
                                     }
                                 },
                                 "required": [
                                     "country",
                                     "rank",
                                     "navy_index",
+                                    "capital_ships",
+                                    "major_combatants",
                                     "total_active",
                                     "detail_url"
                                 ]
@@ -163,7 +166,10 @@
                                 },
                                 "required": [
                                     "country",
-                                    "total_warheads"
+                                    "total_warheads",
+                                    "deployed",
+                                    "stockpile",
+                                    "retired"
                                 ]
                             },
                             {
@@ -205,6 +211,37 @@
                                     "country",
                                     "branch",
                                     "ranks"
+                                ]
+                            },
+                            {
+                                "title": "AirForce",
+                                "type": "object",
+                                "properties": {
+                                    "country": {
+                                        "$ref": "#/$defs/Country"
+                                    },
+                                    "rank": {
+                                        "type": "integer",
+                                        "minimum": 1
+                                    },
+                                    "air_force_index": {
+                                        "type": "number"
+                                    },
+                                    "total_aircraft": {
+                                        "type": "integer",
+                                        "minimum": 0
+                                    },
+                                    "detail_url": {
+                                        "type": "string",
+                                        "format": "uri-reference"
+                                    }
+                                },
+                                "required": [
+                                    "country",
+                                    "rank",
+                                    "air_force_index",
+                                    "total_aircraft",
+                                    "detail_url"
                                 ]
                             }
                         ]
