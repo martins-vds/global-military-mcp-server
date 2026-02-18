@@ -161,6 +161,18 @@ Aggregate root for country-level military force composition. Sub-types represent
 | `stockpile`      | `int`     | Reserve stockpile      | `2000`                     |
 | `retired`        | `int`     | Awaiting dismantlement | `1806`                     |
 
+#### AirForce
+
+| Field             | Type      | Source                    | Example                    |
+| ----------------- | --------- | ------------------------- | -------------------------- |
+| `country`         | `Country` | Column (link text + flag) | `Country(iso3="usa", ...)` |
+| `rank`            | `int`     | Ranking column            | `1`                        |
+| `air_force_index` | `float`   | "Air Force Index" column  | `242.5`                    |
+| `total_aircraft`  | `int`     | "Total Aircraft" column   | `5217`                     |
+| `detail_url`      | `str`     | Constructed from ISO3     | `"/air-forces/usa/"`       |
+
+> **Note**: Exact field names and availability TBD — to be confirmed during T006 (HTML fixture capture) when the air_forces page structure is researched. If the page structure differs significantly, this entity will be updated accordingly.
+
 #### RankStructure
 
 | Field     | Type              | Source          | Example                    |
@@ -184,15 +196,16 @@ Aggregate root for country-level military force composition. Sub-types represent
 
 Structured request from the MCP client. Immutable value object.
 
-| Field      | Type                                     | Required | Default | Constraints               |
-| ---------- | ---------------------------------------- | -------- | ------- | ------------------------- |
-| `category` | `EquipmentCategory \| InventoryCategory` | ✅        | —       | Must be valid enum value  |
-| `query`    | `str \| None`                            | ❌        | `None`  | Name/keyword search text  |
-| `country`  | `str \| None`                            | ❌        | `None`  | ISO-3 country code        |
-| `decade`   | `int \| None`                            | ❌        | `None`  | Multiple of 10, 1900-2030 |
-| `page`     | `int`                                    | ❌        | `1`     | >= 1                      |
+| Field          | Type                                     | Required | Default | Constraints                                      |
+| -------------- | ---------------------------------------- | -------- | ------- | ------------------------------------------------ |
+| `category`     | `EquipmentCategory \| InventoryCategory` | ✅        | —       | Must be valid enum value                         |
+| `query`        | `str \| None`                            | ❌        | `None`  | Name/keyword search text                         |
+| `country`      | `str \| None`                            | ❌        | `None`  | ISO-3 country code                               |
+| `sub_category` | `str \| None`                            | ❌        | `None`  | Sub-type slug (e.g., 'combat', 'aam', 'frigate') |
+| `decade`       | `int \| None`                            | ❌        | `None`  | Multiple of 10, 1900-2030                        |
+| `page`         | `int`                                    | ❌        | `1`     | >= 1                                             |
 
-**Invariants**: At least one filtering parameter (`query`, `country`, `decade`) should be provided, OR `page=1` for browsing. `decade` is only valid for categories that support it (aircraft, ships).
+**Invariants**: At least one filtering parameter (`query`, `country`, `sub_category`, `decade`) should be provided, OR `page=1` for browsing. `decade` is only valid for categories that support it (aircraft, ships). `sub_category` must be a valid slug for the given category (see EquipmentCategory sub-categories).
 
 ### SearchResult
 

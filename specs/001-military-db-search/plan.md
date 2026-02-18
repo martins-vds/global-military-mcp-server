@@ -15,7 +15,7 @@ Build an MCP server that exposes tools for searching military equipment and inve
 **Testing**: pytest + pytest-asyncio, FastMCP Client test fixtures (`Client(transport=mcp)`), inline-snapshot for schema assertions  
 **Target Platform**: Linux server (devcontainer), stdio transport for local dev, HTTP transport for remote  
 **Project Type**: single  
-**Performance Goals**: <3s p95 for first (uncached) query including upstream fetch; <200ms p95 for cached responses  
+**Performance Goals**: <3s p95 for first (uncached) query including upstream fetch; <200ms p95 for cached responses (see Complexity Tracking for Principle IV I/O budget justification)  
 **Constraints**: 1 req/sec max to GlobalMilitary.net, exponential backoff on 429/5xx, 24h default cache TTL (configurable)  
 **Scale/Scope**: 10 data categories (~1600+ total entries), single-server deployment, concurrent clients serialized through rate limiter
 
@@ -56,13 +56,13 @@ Build an MCP server that exposes tools for searching military equipment and inve
 
 ### Principle IV — Performance & Reliability
 
-| Requirement           | Status | Evidence                                                                             |
-| --------------------- | ------ | ------------------------------------------------------------------------------------ |
-| Response time budgets | ✅ PASS | Cached: <200ms p95. Uncached: <3s p95. Comparison (2-5 items): <5s p95.              |
-| Resource efficiency   | ✅ PASS | Cache has configurable max size. Rate limiter bounds concurrent requests to 1/sec.   |
-| Graceful degradation  | ✅ PASS | CircuitBreaker on upstream. ToolError with descriptive message on failure. No hangs. |
-| Concurrency safety    | ✅ PASS | asyncio.Semaphore for rate limiting. Cache reads/writes via atomic file operations.  |
-| Observability         | ✅ PASS | Structured logging via FastMCP Context. Correlation IDs from MCP request context.    |
+| Requirement           | Status     | Evidence                                                                                                                                                     |
+| --------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Response time budgets | ⚠️ ADJUSTED | Cached: <200ms p95. Uncached: <3s p95 (see Complexity Tracking — 1 req/sec rate limit makes <2s impossible for cache-miss). Comparison (2-5 items): <5s p95. |
+| Resource efficiency   | ✅ PASS     | Cache has configurable max size. Rate limiter bounds concurrent requests to 1/sec.                                                                           |
+| Graceful degradation  | ✅ PASS     | CircuitBreaker on upstream (consecutive-failure counter in scraper client: closed→open→half-open). ToolError with descriptive message on failure. No hangs.  |
+| Concurrency safety    | ✅ PASS     | asyncio.Lock for rate limiting (per research.md R4). Cache reads/writes via atomic file operations.                                                          |
+| Observability         | ✅ PASS     | Structured logging via FastMCP Context. Correlation IDs from MCP request context.                                                                            |
 
 ### Principle V — Security & Access Control (NON-NEGOTIABLE)
 
@@ -158,6 +158,7 @@ pyproject.toml               # Project metadata, dependencies, pytest config
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-| Violation                 | Why Needed                                                                                                                              | Simpler Alternative Rejected Because                                                                                             |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Principle V Auth deferred | Initial release uses stdio transport only (local process communication, no network exposure). Auth has zero security benefit for stdio. | Implementing full RBAC for stdio-only adds complexity without security gain. Will be implemented when HTTP transport is enabled. |
+| Violation                       | Why Needed                                                                                                                                                                                                                                                                                              | Simpler Alternative Rejected Because                                                                                                                                                                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Principle V Auth deferred       | Initial release uses stdio transport only (local process communication, no network exposure). Auth has zero security benefit for stdio.                                                                                                                                                                 | Implementing full RBAC for stdio-only adds complexity without security gain. Will be implemented when HTTP transport is enabled.                                                                                                                         |
+| Principle IV I/O budget >2000ms | Constitution mandates <2000ms p95 for external I/O. Uncached queries require: rate limiter wait (up to 1000ms) + upstream HTTP fetch (~500-1500ms) + HTML parse (~50ms). Total realistic floor is ~1500-2500ms. Strict 1 req/sec rate limit (FR-015) makes sub-2s p95 impossible under concurrent load. | Removing rate limit would meet 2s but violates FR-015 and risks upstream blocking. Cache-first architecture ensures >95% of requests hit cache (<200ms). Only first-touch cold queries exceed 2s. Budget set to <3s p95 for uncached, <200ms for cached. |

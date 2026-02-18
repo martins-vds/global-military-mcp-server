@@ -41,8 +41,9 @@
 - [ ] T011 Implement SearchQuery (category + query/country/sub_category/decade/page), SearchResult (items/total_count/page_info/query_notes/category/filters_applied), and ComparisonResult (items/category/shared_fields/comparison_notes) request/response models in src/domain/models.py
 - [ ] T012 [P] Implement FileCache with SHA-256 key hashing, JSON storage, configurable TTL (default 24h), atomic POSIX rename writes, lazy TTL eviction on get(), delete(), and clear() in src/cache/store.py with unit tests in tests/unit/test_cache.py
 - [ ] T013 [P] Implement RateLimiter with asyncio.Lock, 1 req/sec min_interval enforcement, exponential backoff (base=2.0, max_retries=5), and timestamp tracking in src/scraper/client.py with unit tests in tests/unit/test_client.py
+- [ ] T013b [P] Implement CircuitBreaker (closed→open→half-open states, consecutive failure counter, configurable failure_threshold=5, recovery_timeout=60s) in src/scraper/client.py — opens circuit after N consecutive upstream failures, returns ToolError immediately while open, allows one probe request in half-open state. Unit tests in tests/unit/test_client.py
 - [ ] T014 [P] Implement URL builder for all GlobalMilitary.net patterns (list, search by name, paginate, filter_category, filter_country, filter_decade, detail, global_search) per research.md R1 in src/scraper/urls.py with unit tests in tests/unit/test_urls.py
-- [ ] T015 Implement FastMCP server skeleton with @lifespan (create/teardown httpx.AsyncClient + FileCache + RateLimiter), Depends() helpers for dependency injection, and READ_ONLY_ANNOTATIONS constant in src/server.py
+- [ ] T015 Implement FastMCP server skeleton with @lifespan (create/teardown httpx.AsyncClient + FileCache + RateLimiter + CircuitBreaker), Depends() helpers for dependency injection, and READ_ONLY_ANNOTATIONS constant in src/server.py
 - [ ] T016 [P] Integration test for FileCache filesystem operations (atomic write safety, TTL expiry with time mocking, concurrent get/set, clear cleanup) in tests/integration/test_cache_fs.py
 
 **Checkpoint**: Foundation ready — domain models defined, cache operational, rate limiter enforcing 1 req/sec, URL patterns validated, server skeleton running. User story implementation can now begin.
@@ -69,7 +70,7 @@
 ### Implementation for User Story 1
 
 - [ ] T021 [US1] Implement equipment HTML parser — extract Equipment entities from all `table.table` elements using CSS selectors (rows: `table.table > tbody > tr`, detail_link: `td:nth-child(2) > a`), handle per-category column layout, detect pagination from `ul.pagination` in src/scraper/parser.py
-- [ ] T022 [US1] Implement SearchService with equipment search orchestration (build URL via urls.py → check FileCache → acquire RateLimiter → httpx.get() → parse HTML → cache SearchResult → return) in src/domain/services.py
+- [ ] T022 [US1] Implement SearchService with equipment search orchestration (build URL via urls.py → check FileCache → check CircuitBreaker → acquire RateLimiter → httpx.get() → parse HTML → cache SearchResult → return; record success/failure in CircuitBreaker) in src/domain/services.py
 - [ ] T023 [US1] Implement search_equipment tool handler with @mcp.tool(annotations=READ_ONLY_ANNOTATIONS) decorator, parameter validation (category enum, optional query/country/sub_category/decade/page), ToolError mapping for domain errors, and register on server in src/tools/equipment.py
 
 **Checkpoint**: `search_equipment` tool functional — `fastmcp run src/server.py` → tool discoverable via MCP, returns structured equipment data with pagination. **MVP deliverable.**
@@ -271,7 +272,7 @@ With multiple developers after Foundational phase completes:
 | FR-005 | Consistent response format     | T011 (SearchResult model) |
 | FR-006 | Filtering (country/decade/sub) | T014, T021, T022          |
 | FR-007 | Pagination                     | T008, T014, T021          |
-| FR-008 | Upstream error handling        | T013, T020, T022          |
+| FR-008 | Upstream error handling        | T013, T013b, T020, T022   |
 | FR-009 | compare_equipment tool         | T034–T037                 |
 | FR-010 | identify_from_image tool       | T030–T033                 |
 | FR-011 | MCP resources                  | T038–T040                 |
@@ -293,8 +294,8 @@ With multiple developers after Foundational phase completes:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate independently
 - Known consistency issues (from checklists/consistency.md) to resolve during implementation:
-  - CHK011: Add `sub_category` field to SearchQuery model
+  - CHK011: Add `sub_category` field to SearchQuery model ✅ fixed (added to spec.md FR-003 + data-model.md SearchQuery)
   - CHK012: Add IdentificationResult model for identify_from_image response shape
-  - CHK005/006: Use `asyncio.Lock` (not Semaphore) per research.md; skip CircuitBreaker for MVP
-  - CHK013/014: Define AirForce inventory sub-type if data structure discovered during T006
+  - CHK005/006: Use `asyncio.Lock` (not Semaphore) per research.md ✅ fixed; CircuitBreaker added as T013b ✅ fixed
+  - CHK013/014: AirForce entity added to data-model.md ✅ fixed (tentative fields, confirm during T006)
   - CHK036/037: Confirm Vehicles filter availability and decade filter during HTML fixture capture (T006)

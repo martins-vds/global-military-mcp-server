@@ -13,14 +13,14 @@ A user (human or AI agent) sends a plain-text query describing military equipmen
 
 **Why this priority**: Text-based equipment search is the core value proposition of the server. It covers the largest surface area of the database (450+ aircraft, 220+ missiles, 300+ firearms, 120+ vehicles, 470+ ships) and represents the most common use case. Without this, the server provides no value.
 
-**Independent Test**: Can be fully tested by sending a text query like "Russian cruise missiles" and verifying structured results are returned containing matching entries (e.g., 3M14 Kalibr, AGM-84 SLAM-ER filtered out as non-Russian). Delivers immediate research value.
+**Independent Test**: Can be fully tested by invoking `search_equipment(category="missiles", sub_category="cruise", country="rus")` and verifying structured results are returned containing matching entries (e.g., 3M14 Kalibr). Delivers immediate research value.
 
 **Acceptance Scenarios**:
 
-1. **Given** the MCP server is running, **When** a user invokes the equipment search tool with query "F-35", **Then** the server returns structured results containing the F-35 Lightning II with its country, category (Combat), manufacturer, production count, and description.
-2. **Given** the MCP server is running, **When** a user searches for "anti-ship missiles with range over 500km", **Then** the server returns only missiles in the Anti-Ship category whose range exceeds 500km (e.g., 3M22 Zircon at 1000km, AGM-158C LRASM at 926km).
-3. **Given** the MCP server is running, **When** a user searches for "main battle tanks from Germany", **Then** the server returns vehicles filtered by country (Germany) and category (Main Battle Tank), including Leopard 1, Leopard 2, etc.
-4. **Given** the MCP server is running, **When** a user searches with a vague query like "big guns", **Then** the server makes a best-effort interpretation (e.g., searching firearms in the Machine Gun or Anti-Materiel Sniper Rifle categories) and returns results with a note explaining the interpretation.
+1. **Given** the MCP server is running, **When** a user invokes `search_equipment(category="aircraft", query="F-35")`, **Then** the server returns structured results containing the F-35 Lightning II with its country, sub_category (Combat), manufacturer, production count, and description.
+2. **Given** the MCP server is running, **When** a user invokes `search_equipment(category="missiles", sub_category="ashm")`, **Then** the server returns all missiles in the Anti-Ship sub-category (e.g., 3M22 Zircon, AGM-158C LRASM) with range and max speed fields.
+3. **Given** the MCP server is running, **When** a user invokes `search_equipment(category="vehicles", country="deu")`, **Then** the server returns vehicles filtered by country Germany, including Leopard 1, Leopard 2, etc.
+4. **Given** the MCP server is running, **When** a user invokes `search_equipment(category="firearms", sub_category="mg")`, **Then** the server returns firearms in the Machine Gun sub-category with country and firearm_category fields.
 
 ---
 
@@ -87,13 +87,13 @@ A user asks the server to compare two or more pieces of equipment — for exampl
 
 - **FR-001**: System MUST expose a `search_equipment` MCP tool that accepts a category parameter (aircraft, missiles, firearms, vehicles, ships) and a text query, returning matching equipment from the specified category.
 - **FR-002**: System MUST expose a `search_inventory` MCP tool that accepts a category parameter (air_forces, air_bases, navies, ranks, nuclear) and a text query, returning matching inventory data from the specified category.
-- **FR-003**: System MUST accept structured parameters for search tools: `category` (required enum), `query` (optional text for name/keyword matching), `country` (optional country filter), `decade` (optional era filter), and `page` (optional pagination). The server does NOT perform natural-language parsing — the calling MCP client/agent is responsible for decomposing user intent into these structured parameters.
+- **FR-003**: System MUST accept structured parameters for search tools: `category` (required enum), `query` (optional text for name/keyword matching), `country` (optional country filter), `sub_category` (optional sub-type filter, e.g., 'combat' for aircraft, 'aam' for missiles), `decade` (optional era filter), and `page` (optional pagination). The server does NOT perform natural-language parsing — the calling MCP client/agent is responsible for decomposing user intent into these structured parameters.
 - **FR-004**: System MUST accept image inputs via MCP's image content type. The server delegates visual recognition to the calling LLM/agent — it expects the client to describe the image and pass the description as a text query. The server then searches the database using that text description. The server itself does NOT call any external vision API.
 - **FR-005**: System MUST return results in a consistent, structured format including at minimum: item name, country of origin, category/type, and a summary description.
 - **FR-006**: System MUST support filtering results by country, category/sub-type, and decade/era where the source data provides these facets.
 - **FR-007**: System MUST support pagination for result sets that exceed a single page, exposing page number and total page count to callers.
 - **FR-008**: System MUST handle upstream errors from GlobalMilitary.net gracefully, returning descriptive error messages without crashing or hanging. On 429 (rate limited) or 5xx responses, the system MUST apply exponential backoff before retrying.
-- **FR-009**: System MUST expose a `compare_equipment` MCP tool that accepts a category and two or more equipment names within that category, returning their specifications side-by-side.
+- **FR-009**: System MUST expose a `compare_equipment` MCP tool that accepts a category and two or more equipment slugs (URL-safe identifiers, e.g., "f-16-fighting-falcon") within that category, returning their specifications side-by-side.
 - **FR-010**: System MUST expose an `identify_from_image` MCP tool that accepts a text description of an image (provided by the calling LLM's vision) and searches the equipment database for matches.
 - **FR-011**: System MUST expose MCP resources for the GlobalMilitary.net data categories, allowing clients to browse available data domains.
 - **FR-012**: System MUST parse and extract structured data from GlobalMilitary.net HTML pages, handling the site's table-based layout for equipment listings.
@@ -105,7 +105,7 @@ A user asks the server to compare two or more pieces of equipment — for exampl
 
 - **Equipment**: A military hardware item (aircraft, missile, firearm, vehicle, or ship). Key attributes: name, country of origin, category/sub-type, manufacturer, production count, decade/year, description, and technical specifications (category-specific: range, speed, payload for missiles; caliber, rate of fire for firearms; displacement, armament for ships; etc.).
 - **Inventory**: A country-level military force composition. Sub-types include: Air Force (aircraft counts by type, air force index score), Navy (fleet composition by ship type, navy index score), Air Base (name, operating country, host country, year established, coordinates), Rank Structure (rank name, NATO code, branch), Nuclear Arsenal (total warheads, deployed, stockpile, retired, delivery methods).
-- **Search Query**: A structured request from the MCP client. Attributes: category (required enum), query text (optional keyword/name filter), country (optional ISO filter), decade (optional era filter), page number (optional, default 1). The calling agent decomposes user natural language into these structured fields before invoking the tool.
+- **Search Query**: A structured request from the MCP client. Attributes: category (required enum), query text (optional keyword/name filter), country (optional ISO filter), sub_category (optional sub-type filter), decade (optional era filter), page number (optional, default 1). The calling agent decomposes user natural language into these structured fields before invoking the tool.
 - **Search Result**: A structured response containing matched entities. Attributes: list of matching Equipment or Inventory items, total result count, current page, total pages, query interpretation notes.
 - **Comparison**: A side-by-side view of two or more Equipment entities from the same category. Attributes: list of equipment items, shared specification fields, differing values.
 
