@@ -15,9 +15,9 @@ from fastmcp.exceptions import ToolError
 
 logger = logging.getLogger(__name__)
 
+from src.app import mcp, READ_ONLY_ANNOTATIONS
 from src.domain.enums import EquipmentCategory
 from src.domain.services import ComparisonService, IdentificationService, SearchService
-from src.server import mcp, READ_ONLY_ANNOTATIONS
 
 
 def _make_search_service(ctx: Context) -> SearchService:

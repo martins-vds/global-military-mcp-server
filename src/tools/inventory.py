@@ -13,9 +13,9 @@ from fastmcp.exceptions import ToolError
 
 logger = logging.getLogger(__name__)
 
+from src.app import mcp, READ_ONLY_ANNOTATIONS
 from src.domain.enums import InventoryCategory
 from src.domain.services import SearchService
-from src.server import mcp, READ_ONLY_ANNOTATIONS
 
 
 @mcp.tool(annotations=READ_ONLY_ANNOTATIONS)
