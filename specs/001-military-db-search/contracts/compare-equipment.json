@@ -1,0 +1,231 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "compare-equipment",
+    "title": "compare_equipment",
+    "description": "Compare 2-5 military equipment items side-by-side within the same category. Fetches detail pages for each item and presents specifications in a structured comparison format highlighting shared fields.",
+    "type": "object",
+    "properties": {
+        "tool": {
+            "const": "compare_equipment"
+        },
+        "annotations": {
+            "type": "object",
+            "properties": {
+                "readOnlyHint": {
+                    "const": true
+                },
+                "idempotentHint": {
+                    "const": true
+                },
+                "openWorldHint": {
+                    "const": true
+                }
+            }
+        },
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "aircraft",
+                        "missiles",
+                        "firearms",
+                        "vehicles",
+                        "ships"
+                    ],
+                    "description": "Equipment category. All items must belong to this category. Required."
+                },
+                "slugs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "description": "URL-safe slug of the equipment item (e.g., 'f-16-fighting-falcon')."
+                    },
+                    "minItems": 2,
+                    "maxItems": 5,
+                    "description": "List of equipment slugs to compare. Must contain 2-5 items from the same category. Required."
+                }
+            },
+            "required": [
+                "category",
+                "slugs"
+            ],
+            "additionalProperties": false
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "description": "Full Equipment entity (same schema as search_equipment items).",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "slug": {
+                                "type": "string"
+                            },
+                            "country": {
+                                "type": "object",
+                                "properties": {
+                                    "iso3": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "flag_emoji": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "iso3",
+                                    "name"
+                                ]
+                            },
+                            "category": {
+                                "type": "string"
+                            },
+                            "sub_category": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "detail_url": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "slug",
+                            "country",
+                            "category",
+                            "detail_url"
+                        ]
+                    },
+                    "minItems": 2,
+                    "maxItems": 5,
+                    "description": "The compared equipment items with full specifications."
+                },
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "aircraft",
+                        "missiles",
+                        "firearms",
+                        "vehicles",
+                        "ships"
+                    ],
+                    "description": "The common category of all compared items."
+                },
+                "shared_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Field names present in all compared items (e.g., ['name', 'country', 'manufacturer', 'produced'] for aircraft)."
+                },
+                "comparison_notes": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Notes about the comparison (e.g., 'Comparing 3 combat aircraft from different countries')."
+                }
+            },
+            "required": [
+                "items",
+                "category",
+                "shared_fields"
+            ]
+        }
+    },
+    "examples": [
+        {
+            "description": "Compare two fighter jets",
+            "input": {
+                "category": "aircraft",
+                "slugs": [
+                    "f-22-raptor",
+                    "su-57"
+                ]
+            },
+            "expectedOutput": {
+                "items": [
+                    {
+                        "name": "F-22 Raptor",
+                        "slug": "f-22-raptor",
+                        "country": {
+                            "iso3": "usa",
+                            "name": "United States",
+                            "flag_emoji": "🇺🇸"
+                        },
+                        "category": "aircraft",
+                        "sub_category": "Combat",
+                        "detail_url": "/aircraft/f-22-raptor/",
+                        "manufacturer": "Lockheed Martin / Boeing",
+                        "produced": 195,
+                        "description": "Fifth-generation stealth tactical fighter..."
+                    },
+                    {
+                        "name": "Su-57",
+                        "slug": "su-57",
+                        "country": {
+                            "iso3": "rus",
+                            "name": "Russia",
+                            "flag_emoji": "🇷🇺"
+                        },
+                        "category": "aircraft",
+                        "sub_category": "Combat",
+                        "detail_url": "/aircraft/su-57/",
+                        "manufacturer": "Sukhoi",
+                        "produced": 22,
+                        "description": "Fifth-generation multirole fighter..."
+                    }
+                ],
+                "category": "aircraft",
+                "shared_fields": [
+                    "name",
+                    "slug",
+                    "country",
+                    "category",
+                    "sub_category",
+                    "detail_url",
+                    "manufacturer",
+                    "produced",
+                    "description"
+                ],
+                "comparison_notes": "Comparing 2 combat aircraft: F-22 Raptor (USA) vs Su-57 (Russia)"
+            }
+        }
+    ],
+    "errorCases": [
+        {
+            "condition": "Fewer than 2 slugs",
+            "error": "ToolError: Please provide 2 to 5 items to compare. Received 1."
+        },
+        {
+            "condition": "More than 5 slugs",
+            "error": "ToolError: Please provide 2 to 5 items to compare. Received 7."
+        },
+        {
+            "condition": "Slug not found in category",
+            "error": "ToolError: Equipment 'xyz-123' not found in aircraft category. Check the slug and try again."
+        },
+        {
+            "condition": "Mixed categories attempted",
+            "error": "ToolError: Comparisons are only meaningful within the same category. All items must be aircraft."
+        },
+        {
+            "condition": "Upstream timeout on detail fetch",
+            "error": "ToolError: Timed out fetching details for 'f-22-raptor'. The data source may be slow. Please try again."
+        }
+    ]
+}
