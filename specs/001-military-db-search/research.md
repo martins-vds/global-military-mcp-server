@@ -27,13 +27,20 @@ The site uses a consistent HTML structure across all equipment categories: multi
 - Decade: `/{section}/decade/{year}/` (e.g., `/aircraft/decade/1980/`)
 
 **Filter Availability**:
-| Section  | Category | Decade | Country | Name Search |
-| -------- | -------- | ------ | ------- | ----------- |
-| Aircraft | ✅        | ✅      | ✅       | ✅           |
-| Missiles | ✅        | ❌      | ✅       | ✅           |
-| Ships    | ✅        | ✅      | ✅       | ✅           |
-| Firearms | ✅        | ❌      | ✅       | ✅           |
-| Navies   | ❌        | ❌      | ❌       | ❌           |
+| Section    | Category | Decade | Country | Name Search |
+| ---------- | -------- | ------ | ------- | ----------- |
+| Aircraft   | ✅        | ✅      | ✅       | ✅           |
+| Missiles   | ✅        | ❌      | ✅       | ✅           |
+| Ships      | ✅        | ✅      | ✅       | ✅           |
+| Firearms   | ✅        | ❌      | ✅       | ✅           |
+| Navies     | ❌        | ❌      | ❌       | ❌           |
+| Vehicles   | TBD      | TBD    | TBD     | TBD         |
+| Air Bases  | ❌        | ❌      | TBD     | TBD         |
+| Nuclear    | ❌        | ❌      | ❌       | ❌           |
+| Ranks      | ❌        | ❌      | TBD     | ❌           |
+| Air Forces | ❌        | ❌      | ❌       | ❌           |
+
+> **Note**: Rows marked TBD were not researched during Phase 0. To be confirmed during T006 (HTML fixture capture). Inventory sections (Air Bases, Nuclear, Ranks, Air Forces) generally have simpler browsing with fewer filter options than equipment sections.
 
 **Pagination**: `<ul class="pagination">` with `?page=N` query params (1-indexed). Navies has no pagination (single page). Other sections: 6-10 pages.
 

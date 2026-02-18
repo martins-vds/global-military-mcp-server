@@ -13,19 +13,22 @@
 
 Represents the 5 equipment data domains on GlobalMilitary.net.
 
-| Value      | Label    | URL Segment  | Has Decade Filter |
-| ---------- | -------- | ------------ | ----------------- |
-| `aircraft` | Aircraft | `/aircraft/` | ✅                 |
-| `missiles` | Missiles | `/missiles/` | ❌                 |
-| `firearms` | Firearms | `/firearms/` | ❌                 |
-| `vehicles` | Vehicles | `/vehicles/` | TBD               |
-| `ships`    | Ships    | `/ships/`    | ✅                 |
+| Value      | Label    | URL Segment  | Has Decade Filter         |
+| ---------- | -------- | ------------ | ------------------------- |
+| `aircraft` | Aircraft | `/aircraft/` | ✅                         |
+| `missiles` | Missiles | `/missiles/` | ❌                         |
+| `firearms` | Firearms | `/firearms/` | ❌                         |
+| `vehicles` | Vehicles | `/vehicles/` | TBD — confirm during T006 |
+| `ships`    | Ships    | `/ships/`    | ✅                         |
+
+> **Note**: Vehicles decade filter is unresolved — the research phase (R1) did not cover the `/vehicles/` page. To be confirmed during T006 (HTML fixture capture).
 
 **Sub-categories** (used in filter URLs):
 - Aircraft: `combat`, `bomber`, `helicopter`, `training`, `transport`, `uav`, `other`
 - Missiles: `aam`, `ashm`, `asm`, `atm`, `ballistic`, `cruise`, `sam`
 - Ships: `submarine`, `frigate`, `corvette`, `amphibious`, `cruiser`, `destroyer`, `carrier`, `patrol`, `mine`
 - Firearms: `matsniper`, `assault`, `bullassault`, `shotgun`, `lmg`, `mg`, `smg`, `smp`, `sniper`
+- Vehicles: TBD — confirm during T006 (HTML fixture capture)
 
 ### InventoryCategory
 
@@ -144,22 +147,29 @@ Aggregate root for country-level military force composition. Sub-types represent
 
 #### AirBase
 
-| Field               | Type          | Source           | Example                    |
-| ------------------- | ------------- | ---------------- | -------------------------- |
-| `name`              | `str`         | Base name        | `"Aviano Air Base"`        |
-| `operating_country` | `Country`     | Operating nation | `Country(iso3="usa", ...)` |
-| `host_country`      | `Country`     | Host nation      | `Country(iso3="ita", ...)` |
-| `year_established`  | `int \| None` | Year             | `1954`                     |
+| Field               | Type            | Source           | Example                    |
+| ------------------- | --------------- | ---------------- | -------------------------- |
+| `name`              | `str`           | Base name        | `"Aviano Air Base"`        |
+| `operating_country` | `Country`       | Operating nation | `Country(iso3="usa", ...)` |
+| `host_country`      | `Country`       | Host nation      | `Country(iso3="ita", ...)` |
+| `year_established`  | `int \| None`   | Year             | `1954`                     |
+| `latitude`          | `float \| None` | Latitude (TBD)   | `46.0319`                  |
+| `longitude`         | `float \| None` | Longitude (TBD)  | `12.5965`                  |
+
+> **Note**: `latitude` and `longitude` are mentioned in spec.md Key Entities but not confirmed in research HTML columns. To be validated during T006 — if the air bases page does not include coordinates, these fields will be removed.
 
 #### NuclearArsenal
 
-| Field            | Type      | Source                 | Example                    |
-| ---------------- | --------- | ---------------------- | -------------------------- |
-| `country`        | `Country` | Nation                 | `Country(iso3="usa", ...)` |
-| `total_warheads` | `int`     | Total inventory        | `5550`                     |
-| `deployed`       | `int`     | Deployed warheads      | `1744`                     |
-| `stockpile`      | `int`     | Reserve stockpile      | `2000`                     |
-| `retired`        | `int`     | Awaiting dismantlement | `1806`                     |
+| Field              | Type          | Source                 | Example                    |
+| ------------------ | ------------- | ---------------------- | -------------------------- |
+| `country`          | `Country`     | Nation                 | `Country(iso3="usa", ...)` |
+| `total_warheads`   | `int`         | Total inventory        | `5550`                     |
+| `deployed`         | `int`         | Deployed warheads      | `1744`                     |
+| `stockpile`        | `int`         | Reserve stockpile      | `2000`                     |
+| `retired`          | `int`         | Awaiting dismantlement | `1806`                     |
+| `delivery_methods` | `str \| None` | Delivery systems (TBD) | `"ICBM, SLBM, bomber"`     |
+
+> **Note**: `delivery_methods` is mentioned in spec.md Key Entities and US2 acceptance scenario 4 but not confirmed in research HTML columns. To be validated during T006 — if the nuclear page does not include delivery method data, this field will be removed and spec/scenarios updated.
 
 #### AirForce
 
@@ -231,6 +241,25 @@ Structured response from the compare_equipment tool.
 | `shared_fields`    | `list[str]`         | Field names present in all items   |
 | `comparison_notes` | `str \| None`       | Any notes about the comparison     |
 
+### IdentificationResult
+
+Structured response from the identify_from_image tool. Differs from SearchResult — returns ranked matches with explanations rather than paginated listings.
+
+| Field                  | Type                        | Description                                                                 |
+| ---------------------- | --------------------------- | --------------------------------------------------------------------------- |
+| `matches`              | `list[IdentificationMatch]` | Ordered list of matching equipment, best matches first                      |
+| `identification_notes` | `str \| None`               | Notes about the identification process (e.g., "Direct name match found")    |
+| `search_strategy`      | `str`                       | Strategy used: `name_search`, `category_country_browse`, or `global_search` |
+
+**IdentificationMatch** (value object):
+
+| Field          | Type        | Description                                                                                  |
+| -------------- | ----------- | -------------------------------------------------------------------------------------------- |
+| `equipment`    | `Equipment` | Full Equipment entity matching the description                                               |
+| `match_reason` | `str`       | Why this item matched (e.g., "Direct name match: 'F-22 Raptor' found in aircraft database.") |
+
+**Invariants**: `matches` may be empty (no match found). `search_strategy` must be one of the 3 defined values. `match_reason` is always a human-readable string (no numeric confidence — ranking is implicit via list order).
+
 ---
 
 ## State Transitions
@@ -247,6 +276,8 @@ Structured response from the compare_equipment tool.
 - **CACHED → EXPIRED**: TTL elapses (configurable, default 24h). Detected lazily on next `get()`.
 - **EXPIRED → NOT_CACHED**: Expired entry deleted on access. Next request re-fetches.
 - **CACHED → NOT_CACHED**: On-demand invalidation via `delete(key)` or `clear()`.
+
+**Size Limit**: Maximum 500 entries (configurable via `max_entries`). When the cache exceeds `max_entries`, the oldest entries by write timestamp are evicted (LRU-style) on the next `set()` call. This prevents unbounded disk usage across categories × countries × pages.
 
 ### Rate Limiter State Machine
 

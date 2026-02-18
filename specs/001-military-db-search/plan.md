@@ -59,7 +59,7 @@ Build an MCP server that exposes tools for searching military equipment and inve
 | Requirement           | Status     | Evidence                                                                                                                                                     |
 | --------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Response time budgets | ⚠️ ADJUSTED | Cached: <200ms p95. Uncached: <3s p95 (see Complexity Tracking — 1 req/sec rate limit makes <2s impossible for cache-miss). Comparison (2-5 items): <5s p95. |
-| Resource efficiency   | ✅ PASS     | Cache has configurable max size. Rate limiter bounds concurrent requests to 1/sec.                                                                           |
+| Resource efficiency   | ✅ PASS     | Cache has configurable max size (default 500 entries, LRU eviction). Rate limiter bounds concurrent requests to 1/sec.                                       |
 | Graceful degradation  | ✅ PASS     | CircuitBreaker on upstream (consecutive-failure counter in scraper client: closed→open→half-open). ToolError with descriptive message on failure. No hangs.  |
 | Concurrency safety    | ✅ PASS     | asyncio.Lock for rate limiting (per research.md R4). Cache reads/writes via atomic file operations.                                                          |
 | Observability         | ✅ PASS     | Structured logging via FastMCP Context. Correlation IDs from MCP request context.                                                                            |

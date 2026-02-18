@@ -38,7 +38,7 @@
 - [ ] T008 [P] Implement Country, PageInfo, and Decade value objects with Pydantic validation and invariants (iso3=3 lowercase alpha, decade % 10 == 0, current_page <= total_pages) in src/domain/models.py with unit tests in tests/unit/test_models.py
 - [ ] T009 Implement Equipment entity with common fields (name, slug, country, category, sub_category, detail_url) and category-specific variants (Aircraft: manufacturer/produced/description/thumbnail_url, Missiles: range_km/max_speed, Ships: ship_type/year, Firearms: firearm_category) in src/domain/models.py
 - [ ] T010 Implement Inventory entity subtypes (Navy: rank/navy_index/capital_ships/major_combatants/total_active, AirBase: name/operating_country/host_country/year_established, NuclearArsenal: total_warheads/deployed/stockpile/retired, RankStructure: country/branch/ranks with RankEntry) in src/domain/models.py
-- [ ] T011 Implement SearchQuery (category + query/country/sub_category/decade/page), SearchResult (items/total_count/page_info/query_notes/category/filters_applied), and ComparisonResult (items/category/shared_fields/comparison_notes) request/response models in src/domain/models.py
+- [ ] T011 Implement SearchQuery (category + query/country/sub_category/decade/page), SearchResult (items/total_count/page_info/query_notes/category/filters_applied), ComparisonResult (items/category/shared_fields/comparison_notes), and IdentificationResult (matches with IdentificationMatch[equipment+match_reason], identification_notes, search_strategy) request/response models in src/domain/models.py
 - [ ] T012 [P] Implement FileCache with SHA-256 key hashing, JSON storage, configurable TTL (default 24h), atomic POSIX rename writes, lazy TTL eviction on get(), delete(), and clear() in src/cache/store.py with unit tests in tests/unit/test_cache.py
 - [ ] T013 [P] Implement RateLimiter with asyncio.Lock, 1 req/sec min_interval enforcement, exponential backoff (base=2.0, max_retries=5), and timestamp tracking in src/scraper/client.py with unit tests in tests/unit/test_client.py
 - [ ] T013b [P] Implement CircuitBreaker (closed→open→half-open states, consecutive failure counter, configurable failure_threshold=5, recovery_timeout=60s) in src/scraper/client.py — opens circuit after N consecutive upstream failures, returns ToolError immediately while open, allows one probe request in half-open state. Unit tests in tests/unit/test_client.py
@@ -165,6 +165,7 @@
 - [ ] T041 Add structured logging with FastMCP Context across all tools — log tool name, parameters, timestamp, cache hit/miss, upstream response time, result count in src/tools/equipment.py, src/tools/inventory.py, and src/domain/services.py
 - [ ] T042 Run quickstart.md validation — end-to-end smoke test following specs/001-military-db-search/quickstart.md (devcontainer setup, server start, tool invocation via FastMCP Client, all 4 tools + 2 resources)
 - [ ] T043 Create README.md with project overview, architecture diagram, setup instructions, tool reference table (4 tools), resource reference (2 URIs), and development guide
+- [ ] T044 Performance smoke test — measure p95 response times for cached (<200ms target) and uncached (<3s target) search_equipment queries, verify rate limiter serializes concurrent requests, confirm circuit breaker opens after 5 failures. Document results in test output. Located in tests/integration/test_performance.py
 
 ---
 
@@ -295,7 +296,7 @@ With multiple developers after Foundational phase completes:
 - Stop at any checkpoint to validate independently
 - Known consistency issues (from checklists/consistency.md) to resolve during implementation:
   - CHK011: Add `sub_category` field to SearchQuery model ✅ fixed (added to spec.md FR-003 + data-model.md SearchQuery)
-  - CHK012: Add IdentificationResult model for identify_from_image response shape
+  - CHK012: IdentificationResult model ✅ fixed (added to data-model.md + T011 updated)
   - CHK005/006: Use `asyncio.Lock` (not Semaphore) per research.md ✅ fixed; CircuitBreaker added as T013b ✅ fixed
   - CHK013/014: AirForce entity added to data-model.md ✅ fixed (tentative fields, confirm during T006)
   - CHK036/037: Confirm Vehicles filter availability and decade filter during HTML fixture capture (T006)

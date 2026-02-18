@@ -37,7 +37,7 @@ A user queries inventory-level data: air force rankings, navy fleet compositions
 1. **Given** the MCP server is running, **When** a user queries "top 5 navies in the world", **Then** the server returns the top 5 entries from the navies inventory, ranked by score, with carrier count, submarine count, and total vessel count.
 2. **Given** the MCP server is running, **When** a user queries "US air bases in Italy", **Then** the server returns air bases located in Italy operated by the United States (e.g., Aviano Air Base).
 3. **Given** the MCP server is running, **When** a user queries "military ranks in France", **Then** the server returns the rank structure for France, organized by enlisted and officer categories with rank names and NATO equivalents.
-4. **Given** the MCP server is running, **When** a user queries "nuclear arsenals", **Then** the server returns the nuclear arsenal data for all nine nuclear-armed states including total warheads, deployed count, stockpile count, and delivery methods.
+4. **Given** the MCP server is running, **When** a user queries "nuclear arsenals", **Then** the server returns the nuclear arsenal data for all nine nuclear-armed states including total warheads, deployed count, stockpile count, and delivery methods (if available on source page).
 
 ---
 
@@ -52,7 +52,7 @@ A user provides an image (photograph, screenshot, diagram, or insignia) of milit
 **Acceptance Scenarios**:
 
 1. **Given** the MCP server is running, **When** a user provides an image of an aircraft, **Then** the server identifies the aircraft model and returns its full details from the aircraft database including specifications, manufacturer, and operators.
-2. **Given** the MCP server is running, **When** a user provides a blurry or low-quality image, **Then** the server returns a ranked list of possible matches with confidence scores, rather than a single definitive answer.
+2. **Given** the MCP server is running, **When** a user provides a blurry or low-quality image, **Then** the server returns a ranked list of possible matches with match reasons explaining why each result was identified as a potential match, rather than a single definitive answer.
 3. **Given** the MCP server is running, **When** a user provides an image that does not match any military equipment in the database, **Then** the server returns a clear message indicating no match was found, along with its best guess of what the image depicts.
 
 ---
