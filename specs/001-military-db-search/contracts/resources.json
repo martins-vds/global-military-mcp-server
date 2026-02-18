@@ -1,0 +1,327 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "resources",
+    "title": "MCP Resources",
+    "description": "MCP resource endpoints for browsing data categories without invoking tools. Resources provide discovery and metadata that help LLMs understand what data is available before making tool calls.",
+    "resources": [
+        {
+            "uri": "military://categories",
+            "name": "Available Data Categories",
+            "description": "Lists all equipment and inventory categories available for search, with item counts and supported filters.",
+            "mimeType": "application/json",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "equipment_categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string",
+                                    "description": "Category enum value"
+                                },
+                                "label": {
+                                    "type": "string",
+                                    "description": "Human-readable name"
+                                },
+                                "url_segment": {
+                                    "type": "string",
+                                    "description": "URL path segment on GlobalMilitary.net"
+                                },
+                                "approximate_count": {
+                                    "type": "integer",
+                                    "description": "Estimated number of items"
+                                },
+                                "supported_filters": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": [
+                                            "query",
+                                            "country",
+                                            "sub_category",
+                                            "decade"
+                                        ]
+                                    },
+                                    "description": "Filters available for this category"
+                                },
+                                "sub_categories": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "description": "Valid sub-category slugs for filtering"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "label",
+                                "url_segment",
+                                "supported_filters"
+                            ]
+                        }
+                    },
+                    "inventory_categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "url_segment": {
+                                    "type": "string"
+                                },
+                                "supported_filters": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": [
+                                            "query",
+                                            "country"
+                                        ]
+                                    }
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "label",
+                                "url_segment",
+                                "supported_filters"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "equipment_categories",
+                    "inventory_categories"
+                ]
+            },
+            "example": {
+                "equipment_categories": [
+                    {
+                        "id": "aircraft",
+                        "label": "Aircraft",
+                        "url_segment": "/aircraft/",
+                        "approximate_count": 450,
+                        "supported_filters": [
+                            "query",
+                            "country",
+                            "sub_category",
+                            "decade"
+                        ],
+                        "sub_categories": [
+                            "combat",
+                            "bomber",
+                            "helicopter",
+                            "training",
+                            "transport",
+                            "uav",
+                            "other"
+                        ]
+                    },
+                    {
+                        "id": "missiles",
+                        "label": "Missiles",
+                        "url_segment": "/missiles/",
+                        "approximate_count": 220,
+                        "supported_filters": [
+                            "query",
+                            "country",
+                            "sub_category"
+                        ],
+                        "sub_categories": [
+                            "aam",
+                            "ashm",
+                            "asm",
+                            "atm",
+                            "ballistic",
+                            "cruise",
+                            "sam"
+                        ]
+                    },
+                    {
+                        "id": "ships",
+                        "label": "Ships",
+                        "url_segment": "/ships/",
+                        "approximate_count": 470,
+                        "supported_filters": [
+                            "query",
+                            "country",
+                            "sub_category",
+                            "decade"
+                        ],
+                        "sub_categories": [
+                            "submarine",
+                            "frigate",
+                            "corvette",
+                            "amphibious",
+                            "cruiser",
+                            "destroyer",
+                            "carrier",
+                            "patrol",
+                            "mine"
+                        ]
+                    },
+                    {
+                        "id": "firearms",
+                        "label": "Firearms",
+                        "url_segment": "/firearms/",
+                        "approximate_count": 300,
+                        "supported_filters": [
+                            "query",
+                            "country",
+                            "sub_category"
+                        ],
+                        "sub_categories": [
+                            "matsniper",
+                            "assault",
+                            "bullassault",
+                            "shotgun",
+                            "lmg",
+                            "mg",
+                            "smg",
+                            "smp",
+                            "sniper"
+                        ]
+                    },
+                    {
+                        "id": "vehicles",
+                        "label": "Vehicles",
+                        "url_segment": "/vehicles/",
+                        "approximate_count": 120,
+                        "supported_filters": [
+                            "query",
+                            "country",
+                            "sub_category"
+                        ]
+                    }
+                ],
+                "inventory_categories": [
+                    {
+                        "id": "navies",
+                        "label": "Navies",
+                        "url_segment": "/navies/",
+                        "supported_filters": [
+                            "country"
+                        ]
+                    },
+                    {
+                        "id": "air_forces",
+                        "label": "Air Forces",
+                        "url_segment": "/air_forces/",
+                        "supported_filters": [
+                            "query",
+                            "country"
+                        ]
+                    },
+                    {
+                        "id": "air_bases",
+                        "label": "Air Bases",
+                        "url_segment": "/airbases/",
+                        "supported_filters": [
+                            "query",
+                            "country"
+                        ]
+                    },
+                    {
+                        "id": "ranks",
+                        "label": "Military Ranks",
+                        "url_segment": "/ranks/",
+                        "supported_filters": [
+                            "country"
+                        ]
+                    },
+                    {
+                        "id": "nuclear",
+                        "label": "Nuclear Arsenals",
+                        "url_segment": "/nuclear/",
+                        "supported_filters": [
+                            "country"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "uriTemplate": "military://equipment/{category}/sub-categories",
+            "name": "Equipment Sub-Categories",
+            "description": "Lists valid sub-category slugs for a given equipment category, with human-readable labels.",
+            "mimeType": "application/json",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "category": {
+                        "type": "string"
+                    },
+                    "sub_categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "slug": {
+                                    "type": "string",
+                                    "description": "URL-safe sub-category identifier"
+                                },
+                                "label": {
+                                    "type": "string",
+                                    "description": "Human-readable label"
+                                }
+                            },
+                            "required": [
+                                "slug",
+                                "label"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "category",
+                    "sub_categories"
+                ]
+            },
+            "example": {
+                "category": "aircraft",
+                "sub_categories": [
+                    {
+                        "slug": "combat",
+                        "label": "Combat Aircraft"
+                    },
+                    {
+                        "slug": "bomber",
+                        "label": "Bombers"
+                    },
+                    {
+                        "slug": "helicopter",
+                        "label": "Helicopters"
+                    },
+                    {
+                        "slug": "training",
+                        "label": "Training Aircraft"
+                    },
+                    {
+                        "slug": "transport",
+                        "label": "Transport Aircraft"
+                    },
+                    {
+                        "slug": "uav",
+                        "label": "UAVs / Drones"
+                    },
+                    {
+                        "slug": "other",
+                        "label": "Other"
+                    }
+                ]
+            }
+        }
+    ],
+    "designNotes": {
+        "resourceVsTool": "Resources are used for discovery and static metadata (what categories exist, what filters are available). Tools are used for actual data retrieval (search, compare, identify). This separation follows MCP best practices — resources inform the LLM's decision about which tool to call and with what parameters.",
+        "caching": "Resource responses are derived from static configuration (not scraped). They can be cached indefinitely or until server restart.",
+        "uriScheme": "The 'military://' URI scheme is used for MCP resource URIs. This is an internal scheme recognized by the MCP server, not a network protocol."
+    }
+}

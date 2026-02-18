@@ -1,0 +1,262 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "identify-from-image",
+    "title": "identify_from_image",
+    "description": "Identify military equipment from an image description. The calling LLM analyzes the image and provides a text description; this tool searches the database for matching equipment. This tool does NOT process images directly — it accepts a structured description extracted by the LLM from the image.",
+    "type": "object",
+    "properties": {
+        "tool": {
+            "const": "identify_from_image"
+        },
+        "annotations": {
+            "type": "object",
+            "properties": {
+                "readOnlyHint": {
+                    "const": true
+                },
+                "idempotentHint": {
+                    "const": true
+                },
+                "openWorldHint": {
+                    "const": true
+                }
+            }
+        },
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "equipment_name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Name or designation of the equipment identified from the image (e.g., 'F-22 Raptor', 'AK-47'). Optional if category + characteristics are provided.",
+                    "default": null
+                },
+                "category": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "enum": [
+                        "aircraft",
+                        "missiles",
+                        "firearms",
+                        "vehicles",
+                        "ships",
+                        null
+                    ],
+                    "description": "Equipment category determined from the image. Optional — if unknown, all categories are searched.",
+                    "default": null
+                },
+                "characteristics": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Free-text description of visual characteristics from the image (e.g., 'twin-engine stealth fighter with angular surfaces, delta wings'). Used as supplementary search context. Optional.",
+                    "default": null
+                },
+                "country_of_origin": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "ISO 3166-1 alpha-3 country code if identifiable from markings/insignia in the image. Optional.",
+                    "pattern": "^[a-zA-Z]{3}$",
+                    "default": null
+                }
+            },
+            "anyOf": [
+                {
+                    "required": [
+                        "equipment_name"
+                    ]
+                },
+                {
+                    "required": [
+                        "category",
+                        "characteristics"
+                    ]
+                }
+            ],
+            "additionalProperties": false
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "matches": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "equipment": {
+                                "type": "object",
+                                "description": "Full Equipment entity matching the image description.",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "slug": {
+                                        "type": "string"
+                                    },
+                                    "country": {
+                                        "type": "object",
+                                        "properties": {
+                                            "iso3": {
+                                                "type": "string"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "flag_emoji": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "iso3",
+                                            "name"
+                                        ]
+                                    },
+                                    "category": {
+                                        "type": "string"
+                                    },
+                                    "sub_category": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "detail_url": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "slug",
+                                    "country",
+                                    "category",
+                                    "detail_url"
+                                ]
+                            },
+                            "match_reason": {
+                                "type": "string",
+                                "description": "Explanation of why this item was matched (e.g., 'Name match: F-22 Raptor', 'Category and country match with similar characteristics')."
+                            }
+                        },
+                        "required": [
+                            "equipment",
+                            "match_reason"
+                        ]
+                    },
+                    "description": "Ordered list of matching equipment, best matches first."
+                },
+                "identification_notes": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Notes about the identification process (e.g., 'Direct name match found', 'No exact match — showing closest results by category and country')."
+                },
+                "search_strategy": {
+                    "type": "string",
+                    "description": "Description of the search strategy used (e.g., 'name_search', 'category_country_browse', 'global_search')."
+                }
+            },
+            "required": [
+                "matches",
+                "search_strategy"
+            ]
+        }
+    },
+    "examples": [
+        {
+            "description": "Identify aircraft from LLM's image analysis",
+            "input": {
+                "equipment_name": "F-22 Raptor",
+                "category": "aircraft",
+                "country_of_origin": "usa"
+            },
+            "expectedOutput": {
+                "matches": [
+                    {
+                        "equipment": {
+                            "name": "F-22 Raptor",
+                            "slug": "f-22-raptor",
+                            "country": {
+                                "iso3": "usa",
+                                "name": "United States",
+                                "flag_emoji": "🇺🇸"
+                            },
+                            "category": "aircraft",
+                            "sub_category": "Combat",
+                            "detail_url": "/aircraft/f-22-raptor/",
+                            "manufacturer": "Lockheed Martin / Boeing",
+                            "produced": 195
+                        },
+                        "match_reason": "Direct name match: 'F-22 Raptor' found in aircraft database."
+                    }
+                ],
+                "identification_notes": "Exact match found for F-22 Raptor in aircraft category.",
+                "search_strategy": "name_search"
+            }
+        },
+        {
+            "description": "Identify from visual characteristics only",
+            "input": {
+                "category": "aircraft",
+                "characteristics": "twin-engine stealth fighter with angular surfaces and canted vertical stabilizers"
+            },
+            "expectedOutput": {
+                "matches": [
+                    {
+                        "equipment": {
+                            "name": "F-22 Raptor",
+                            "slug": "f-22-raptor",
+                            "country": {
+                                "iso3": "usa",
+                                "name": "United States"
+                            },
+                            "category": "aircraft",
+                            "detail_url": "/aircraft/f-22-raptor/"
+                        },
+                        "match_reason": "Category match: combat aircraft. Visual characteristics align with stealth fighter class."
+                    },
+                    {
+                        "equipment": {
+                            "name": "Su-57",
+                            "slug": "su-57",
+                            "country": {
+                                "iso3": "rus",
+                                "name": "Russia"
+                            },
+                            "category": "aircraft",
+                            "detail_url": "/aircraft/su-57/"
+                        },
+                        "match_reason": "Category match: combat aircraft. Similar stealth fighter profile."
+                    }
+                ],
+                "identification_notes": "No exact name provided. Returning stealth-class combat aircraft as potential matches based on characteristics.",
+                "search_strategy": "category_country_browse"
+            }
+        }
+    ],
+    "errorCases": [
+        {
+            "condition": "No identifying information provided",
+            "error": "ToolError: Please provide at least an equipment name or a category with visual characteristics."
+        },
+        {
+            "condition": "No matches found",
+            "error": "ToolError: No matching equipment found for the provided description. Try providing more specific details or check the equipment name spelling."
+        }
+    ],
+    "designNotes": {
+        "imageDelegation": "This tool does NOT process images. Image analysis is delegated to the calling LLM (e.g., Claude, GPT-4V). The LLM extracts equipment_name, category, characteristics, and country_of_origin from the image, then calls this tool with those structured parameters.",
+        "searchStrategy": "1) If equipment_name provided → direct name search in specified or all categories. 2) If only category + characteristics → browse category, return all items as potential matches. 3) If country_of_origin provided → filter results by country.",
+        "clarificationRef": "See spec.md Clarification #2: 'The MCP server will NOT directly analyze images. Instead, it will expose a tool that accepts a text description of the image and searches the database.'"
+    }
+}

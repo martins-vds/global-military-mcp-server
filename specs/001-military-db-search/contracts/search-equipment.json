@@ -1,0 +1,365 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "search-equipment",
+    "title": "search_equipment",
+    "description": "Search military equipment (aircraft, missiles, firearms, vehicles, ships) on GlobalMilitary.net. Returns structured results with pagination. All tools are read-only scrapers that do not modify any data.",
+    "type": "object",
+    "properties": {
+        "tool": {
+            "const": "search_equipment"
+        },
+        "annotations": {
+            "type": "object",
+            "properties": {
+                "readOnlyHint": {
+                    "const": true
+                },
+                "idempotentHint": {
+                    "const": true
+                },
+                "openWorldHint": {
+                    "const": true
+                }
+            }
+        },
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "aircraft",
+                        "missiles",
+                        "firearms",
+                        "vehicles",
+                        "ships"
+                    ],
+                    "description": "Equipment category to search within. Required."
+                },
+                "query": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Name or keyword search text (e.g., 'F-16', 'stealth'). Maps to ?name= parameter on the site. Optional — omit to browse full category.",
+                    "default": null
+                },
+                "country": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "ISO 3166-1 alpha-3 country code to filter by (e.g., 'usa', 'chn', 'rus'). Case-insensitive, stored lowercase. Optional.",
+                    "pattern": "^[a-zA-Z]{3}$",
+                    "default": null
+                },
+                "sub_category": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Sub-category slug for finer filtering (e.g., 'combat' for aircraft, 'aam' for missiles, 'submarine' for ships, 'assault' for firearms). See data-model.md for valid slugs per category. Optional.",
+                    "default": null
+                },
+                "decade": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "description": "Decade filter (multiple of 10, range 1900-2030). Only valid for aircraft and ships categories — ignored for others. Optional.",
+                    "multipleOf": 10,
+                    "minimum": 1900,
+                    "maximum": 2030,
+                    "default": null
+                },
+                "page": {
+                    "type": "integer",
+                    "description": "Page number for pagination (1-indexed). Default: 1.",
+                    "minimum": 1,
+                    "default": 1
+                }
+            },
+            "required": [
+                "category"
+            ],
+            "additionalProperties": false
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Equipment name (e.g., 'F-16 Fighting Falcon')"
+                            },
+                            "slug": {
+                                "type": "string",
+                                "description": "URL-safe identifier extracted from detail link"
+                            },
+                            "country": {
+                                "type": "object",
+                                "properties": {
+                                    "iso3": {
+                                        "type": "string",
+                                        "pattern": "^[a-z]{3}$"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "flag_emoji": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "iso3",
+                                    "name"
+                                ]
+                            },
+                            "category": {
+                                "type": "string",
+                                "enum": [
+                                    "aircraft",
+                                    "missiles",
+                                    "firearms",
+                                    "vehicles",
+                                    "ships"
+                                ]
+                            },
+                            "sub_category": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "detail_url": {
+                                "type": "string",
+                                "format": "uri-reference"
+                            },
+                            "manufacturer": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Aircraft only"
+                            },
+                            "produced": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ],
+                                "description": "Aircraft only"
+                            },
+                            "description": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Aircraft only"
+                            },
+                            "thumbnail_url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Aircraft only"
+                            },
+                            "range_km": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Missiles only"
+                            },
+                            "max_speed": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Missiles only"
+                            },
+                            "ship_type": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Ships only"
+                            },
+                            "year": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ],
+                                "description": "Ships only"
+                            },
+                            "firearm_category": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Firearms only"
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "slug",
+                            "country",
+                            "category",
+                            "detail_url"
+                        ]
+                    },
+                    "description": "List of matching equipment items. Fields vary by category."
+                },
+                "total_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Estimated total matching items across all pages."
+                },
+                "page_info": {
+                    "type": "object",
+                    "properties": {
+                        "current_page": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "total_pages": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "has_next": {
+                            "type": "boolean"
+                        },
+                        "has_previous": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "current_page",
+                        "total_pages",
+                        "has_next",
+                        "has_previous"
+                    ]
+                },
+                "query_notes": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Human-readable notes about query interpretation (e.g., 'Searched aircraft by name: F-16, filtered by country: USA')."
+                },
+                "category": {
+                    "type": "string",
+                    "description": "The category that was searched."
+                },
+                "filters_applied": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "description": "Map of active filter names to values (e.g., {\"country\": \"usa\", \"decade\": \"1980\"})."
+                }
+            },
+            "required": [
+                "items",
+                "total_count",
+                "page_info",
+                "category",
+                "filters_applied"
+            ]
+        }
+    },
+    "examples": [
+        {
+            "description": "Search F-16 aircraft",
+            "input": {
+                "category": "aircraft",
+                "query": "F-16"
+            },
+            "expectedOutput": {
+                "items": [
+                    {
+                        "name": "F-16 Fighting Falcon",
+                        "slug": "f-16-fighting-falcon",
+                        "country": {
+                            "iso3": "usa",
+                            "name": "United States",
+                            "flag_emoji": "🇺🇸"
+                        },
+                        "category": "aircraft",
+                        "sub_category": "Combat",
+                        "detail_url": "/aircraft/f-16-fighting-falcon/",
+                        "manufacturer": "General Dynamics / Lockheed Martin",
+                        "produced": 4604,
+                        "description": "Multirole combat aircraft...",
+                        "thumbnail_url": "https://media.globalmilitary.net/aircraft/f-16.jpg"
+                    }
+                ],
+                "total_count": 3,
+                "page_info": {
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "has_next": false,
+                    "has_previous": false
+                },
+                "query_notes": "Searched aircraft by name: F-16",
+                "category": "aircraft",
+                "filters_applied": {
+                    "query": "F-16"
+                }
+            }
+        },
+        {
+            "description": "Browse Russian missiles, page 2",
+            "input": {
+                "category": "missiles",
+                "country": "rus",
+                "page": 2
+            },
+            "expectedOutput": {
+                "items": [
+                    "..."
+                ],
+                "total_count": 45,
+                "page_info": {
+                    "current_page": 2,
+                    "total_pages": 5,
+                    "has_next": true,
+                    "has_previous": true
+                },
+                "query_notes": "Browsing missiles filtered by country: Russia, page 2 of 5",
+                "category": "missiles",
+                "filters_applied": {
+                    "country": "rus"
+                }
+            }
+        }
+    ],
+    "errorCases": [
+        {
+            "condition": "Invalid category value",
+            "error": "ToolError: Invalid equipment category 'tanks'. Valid categories: aircraft, missiles, firearms, vehicles, ships"
+        },
+        {
+            "condition": "Decade filter on unsupported category",
+            "error": "ToolError: Decade filter is not available for missiles. Only aircraft and ships support decade filtering."
+        },
+        {
+            "condition": "Invalid country code format",
+            "error": "ToolError: Country code must be 3 letters (ISO 3166-1 alpha-3), got 'US'"
+        },
+        {
+            "condition": "Upstream site unreachable",
+            "error": "ToolError: Unable to reach GlobalMilitary.net. The data source is temporarily unavailable. Please try again later."
+        },
+        {
+            "condition": "Rate limited by upstream (429)",
+            "error": "ToolError: Rate limited by data source. Retrying with backoff... (automatic, up to 5 retries)"
+        }
+    ]
+}
